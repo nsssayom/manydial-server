@@ -1,0 +1,8 @@
+{
+    "cSpell.words": [
+        "Twilio",
+        "timestamptz",
+        "typeorm"
+    ],
+    "typescript.tsdk": "node_modules/typescript/lib"
+}

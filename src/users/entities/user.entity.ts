@@ -1,60 +1,62 @@
+import { json } from 'express';
 import {
     Column,
     CreateDateColumn,
     Entity,
-    PrimaryGeneratedColumn,
+    PrimaryColumn,
     UpdateDateColumn,
 } from 'typeorm';
 
 @Entity('users')
 export class User {
-    @PrimaryGeneratedColumn()
-    id: number;
-
-    @Column({
-        unique: true,
-    })
-    gid: string;
-
-    @Column()
-    gid_type: string;
-
-    @Column({
-        unique: true,
-    })
-    phone: string;
-
-    @Column({
-        unique: true,
-    })
-    firebase_uuid: string;
+    @PrimaryColumn({ unique: true })
+    uid: string;
 
     @Column({
         nullable: true,
     })
-    date_of_birth: Date;
+    date_of_birth: string;
+
+    @Column({
+        unique: true,
+        nullable: true,
+    })
+    porichoy_id: string;
+
+    @Column({ type: 'json', nullable: true })
+    porichoy_response: any;
+
+    @Column({
+        default: false,
+    })
+    twilio_verified: boolean;
+
+    @Column({
+        default: '',
+    })
+    twilio_verification_call_sid: string;
 
     @CreateDateColumn({
         type: 'timestamptz',
         default: () => 'CURRENT_TIMESTAMP',
     })
-    createDateTime: Date;
+    created_on: Date;
 
     @UpdateDateColumn({
         type: 'timestamptz',
         default: () => 'CURRENT_TIMESTAMP',
     })
-    lastChangedDateTime: Date;
+    updated_on: Date;
 
-    @Column({ type: 'varchar', length: 300, nullable: true })
-    internalComment: string | null;
+    @Column({ type: 'varchar', length: 3000, nullable: true })
+    internal_comment: JSON;
+
+    @Column({ type: 'timestamptz', default: null, nullable: true })
+    banned_on: Date;
 
     @Column({
         default: 10,
         nullable: true,
     })
     balance: number;
-
-    @Column({ type: 'boolean', default: false })
-    isBanned: boolean;
 }

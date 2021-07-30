@@ -14,11 +14,11 @@ export class AppController {
         private readonly fireSDK: FirebaseAdminSDK,
     ) {}
 
-    @Get()
+    /* @Get()
     @UseGuards(AuthGuard('firebase'))
     getHello(@Req() request): any {
         //return this.appService.getHello();
         console.log(request.user);
         return request.user;
-    }
+    } */
 }

@@ -1,8 +1,10 @@
 import { json } from 'express';
+import { Order } from 'src/orders/entities/order.entity';
 import {
     Column,
     CreateDateColumn,
     Entity,
+    OneToMany,
     PrimaryColumn,
     UpdateDateColumn,
 } from 'typeorm';
@@ -59,4 +61,7 @@ export class User {
         nullable: true,
     })
     balance: number;
+
+    @OneToMany(() => Order, (order) => order.user)
+    orders: Order[];
 }

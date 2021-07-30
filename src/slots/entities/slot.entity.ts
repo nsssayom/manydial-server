@@ -1,7 +1,9 @@
+import { Order } from 'src/orders/entities/order.entity';
 import {
     Column,
     CreateDateColumn,
     Entity,
+    ManyToOne,
     PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -9,6 +11,12 @@ import {
 export class Slot {
     @PrimaryGeneratedColumn()
     id: number;
+
+    @ManyToOne(() => Order, (order) => order.slots, {
+        nullable: true,
+        eager: true,
+    })
+    order: Order;
 
     @Column({
         unique: true,
@@ -24,21 +32,17 @@ export class Slot {
 
     @Column({
         unique: true,
+        type: 'timestamptz',
+        nullable: true,
     })
-    cron_start_string: string;
+    expires_on: Date;
 
     @CreateDateColumn({
         type: 'timestamptz',
         default: () => 'CURRENT_TIMESTAMP',
     })
-    createdOn: Date;
-
-    @Column({ type: 'varchar', length: 300, nullable: true })
-    internalComment: string | null;
+    created_on: Date;
 
     @Column({ type: 'boolean', default: false })
-    isMultiSlot: boolean;
-
-    @Column({ type: 'boolean', default: true })
-    active: boolean;
+    is_active: boolean;
 }

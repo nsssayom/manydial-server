@@ -11,6 +11,10 @@ import { FirebaseAdminModule } from '@tfarras/nestjs-firebase-admin';
 import { AuthModule } from './auth/auth.module';
 import * as admin from 'firebase-admin';
 import { TwilioModule } from 'nestjs-twilio';
+import { ScheduleModule } from '@nestjs/schedule';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
     imports: [
@@ -35,6 +39,10 @@ import { TwilioModule } from 'nestjs-twilio';
         ConfigModule.forRoot({
             isGlobal: true,
         }),
+        ServeStaticModule.forRoot({
+            rootPath: join(__dirname, '..', 'public'),
+        }),
+        ScheduleModule.forRoot(),
         UsersModule,
         SlotsModule,
         FirebaseAdminModule.forRootAsync({
@@ -43,6 +51,7 @@ import { TwilioModule } from 'nestjs-twilio';
             }),
         }),
         AuthModule,
+        OrdersModule,
     ],
     controllers: [AppController],
     providers: [AppService],

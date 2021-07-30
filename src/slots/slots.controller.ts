@@ -10,7 +10,7 @@ import {
     UseGuards,
 } from '@nestjs/common';
 import { SlotsService } from './slots.service';
-import { GetSlotEndingTimeDto } from './dto/get-slot-ending-time.dto';
+import { GetSlotDto } from './dto/get-slot.dto';
 import {
     FirebaseAdminSDK,
     FIREBASE_ADMIN_INJECT,
@@ -43,8 +43,9 @@ export class SlotsController {
     }
 
     @Get()
-    getSlotEndingTime(@Body() getSlotEndingTimeDto: GetSlotEndingTimeDto) {
-        return this.slotsService.getSlotEndingTime(getSlotEndingTimeDto);
+    // @UseGuards(AuthGuard('firebase'))
+    getSlotEndingTime(@Body() getSlotDto: GetSlotDto) {
+        return this.slotsService.getSlot(getSlotDto);
     }
 
     /*     @Get(':id')

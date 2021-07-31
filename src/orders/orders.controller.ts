@@ -6,18 +6,35 @@ import {
     Patch,
     Param,
     Delete,
+    UseInterceptors,
+    UploadedFile,
+    UseGuards,
+    Req,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { multerOptions } from 'src/config/multer.config';
+import { AuthGuard } from '@nestjs/passport';
+import { request } from 'express';
 
 @Controller('orders')
 export class OrdersController {
     constructor(private readonly ordersService: OrdersService) {}
 
     @Post()
-    create(@Body() createOrderDto: CreateOrderDto) {
-        return this.ordersService.create(createOrderDto);
+    @UseGuards(AuthGuard('firebase'))
+    @UseInterceptors(FileInterceptor('audio', multerOptions))
+    create(
+        @Req() request,
+        @UploadedFile() audio_file,
+        @Body() createOrderDto: CreateOrderDto,
+    ) {
+        return this.ordersService.create(
+            request.user.firebase_user,
+            audio_file,
+            createOrderDto,
+        );
     }
 
     @Get()
@@ -28,11 +45,6 @@ export class OrdersController {
     @Get(':id')
     findOne(@Param('id') id: string) {
         return this.ordersService.findOne(+id);
-    }
-
-    @Patch(':id')
-    update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
-        return this.ordersService.update(+id, updateOrderDto);
     }
 
     @Delete(':id')

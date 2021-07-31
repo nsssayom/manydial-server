@@ -1,1 +1,4 @@
-export class CreateOrderDto {}
+export class CreateOrderDto {
+    recipients: string;
+    slots: string;
+}

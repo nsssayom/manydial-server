@@ -3,12 +3,17 @@ import {
     Column,
     CreateDateColumn,
     Entity,
+    JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
 } from 'typeorm';
 
 @Entity('slot')
 export class Slot {
+    constructor(obj?: any) {
+        obj ? obj && Object.assign(this, obj) : null;
+    }
+
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -16,6 +21,7 @@ export class Slot {
         nullable: true,
         eager: true,
     })
+    @JoinColumn({ name: 'order_id' })
     order: Order;
 
     @Column({
@@ -31,7 +37,11 @@ export class Slot {
     end_time: Date;
 
     @Column({
-        unique: true,
+        type: 'int',
+    })
+    call_count: number;
+
+    @Column({
         type: 'timestamptz',
         nullable: true,
     })

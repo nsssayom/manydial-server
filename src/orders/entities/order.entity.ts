@@ -14,11 +14,13 @@ export class Order {
     @PrimaryGeneratedColumn()
     id: number;
 
+    @ManyToOne(() => User, (user) => user.orders)
+    user: User;
+
     @Column({
         unique: true,
-        nullable: true,
     })
-    audio_url: Date;
+    audio_url: string;
 
     @Column({
         array: true,
@@ -26,26 +28,26 @@ export class Order {
     })
     recipients: string[];
 
-    @OneToMany(() => Slot, (slot) => slot.id)
-    slots: Slot[];
-
-    @Column({ type: 'int' })
+    @Column({ type: 'int', nullable: true })
     no_of_calls: number;
 
-    @Column({ type: 'int' })
+    @Column({ type: 'int', nullable: true })
     audio_length: number;
 
-    @Column({ type: 'int' })
+    @Column({ type: 'int', nullable: true })
     pulsed_call_length: number;
 
-    @Column({ type: 'int' })
+    @Column({ type: 'int', nullable: true })
     pulsed_total_mins: number;
 
-    @Column()
+    @Column({ nullable: true })
     cost_per_min: number;
 
-    @Column()
+    @Column({ nullable: true })
     total_cost: number;
+
+    @Column({ default: 'QUEUED' })
+    order_status: string;
 
     @CreateDateColumn({
         type: 'timestamptz',
@@ -53,9 +55,6 @@ export class Order {
     })
     created_on: Date;
 
-    @Column({ default: 'QUEUED' })
-    order_status: string;
-
-    @ManyToOne(() => User, (user) => user.orders)
-    user: User;
+    @OneToMany(() => Slot, (slot) => slot.order)
+    slots: Slot[];
 }

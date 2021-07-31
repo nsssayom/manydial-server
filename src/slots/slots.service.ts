@@ -122,6 +122,12 @@ export class SlotsService {
                 const slot_obj = new Slot();
                 slot_obj.start_time = slot.slot_start_time;
                 slot_obj.end_time = slot.slot_end_time;
+                slot_obj.is_active = true; // TODO: make this false
+                slot_obj.call_count =
+                    ((slot.slot_end_time.valueOf() -
+                        slot.slot_start_time.valueOf()) *
+                        parseInt(process.env.CALL_PER_SEC)) /
+                    1000;
                 slot_obj.expires_on = new Date(
                     new Date().valueOf() + milliseconds,
                 );

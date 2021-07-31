@@ -1,6 +1,7 @@
 {
     "cSpell.words": [
         "Twilio",
+        "mimetypes",
         "timestamptz",
         "typeorm"
     ],

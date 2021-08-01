@@ -1,25 +1,27 @@
 import { Order } from 'src/orders/entities/order.entity';
+import { Call } from 'src/orders/entities/call.entity';
 import {
     Column,
     CreateDateColumn,
     Entity,
     JoinColumn,
     ManyToOne,
+    OneToMany,
     PrimaryGeneratedColumn,
 } from 'typeorm';
 
-@Entity('slot')
+@Entity('slots')
 export class Slot {
     constructor(obj?: any) {
         obj ? obj && Object.assign(this, obj) : null;
     }
 
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
     @ManyToOne(() => Order, (order) => order.slots, {
         nullable: true,
-        eager: true,
+        /* eager: true, */
     })
     @JoinColumn({ name: 'order_id' })
     order: Order;
@@ -35,6 +37,13 @@ export class Slot {
         type: 'timestamptz',
     })
     end_time: Date;
+
+    @Column({
+        array: true,
+        type: 'text',
+        nullable: true,
+    })
+    recipients: string[];
 
     @Column({
         type: 'int',
@@ -55,4 +64,7 @@ export class Slot {
 
     @Column({ type: 'boolean', default: false })
     is_active: boolean;
+
+    @OneToMany(() => Call, (call) => call.slot)
+    calls: Call[];
 }

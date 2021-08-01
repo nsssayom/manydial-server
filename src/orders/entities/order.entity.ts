@@ -4,17 +4,22 @@ import {
     Column,
     CreateDateColumn,
     Entity,
+    JoinColumn,
     ManyToOne,
     OneToMany,
     PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Call } from './call.entity';
 
-@Entity('order')
+@Entity('orders')
 export class Order {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
-    @ManyToOne(() => User, (user) => user.orders)
+    @ManyToOne(() => User, (user) => user.orders, {
+        /*  eager: true */
+    })
+    @JoinColumn({ name: 'user_id' })
     user: User;
 
     @Column({
@@ -23,21 +28,21 @@ export class Order {
     audio_url: string;
 
     @Column({
-        array: true,
         type: 'text',
+        nullable: true,
     })
-    recipients: string[];
+    recipients: string;
 
-    @Column({ type: 'int', nullable: true })
+    @Column({ type: 'int' })
     no_of_calls: number;
 
-    @Column({ type: 'int', nullable: true })
+    @Column({ type: 'int' })
     audio_length: number;
 
-    @Column({ type: 'int', nullable: true })
+    @Column({ type: 'int' })
     pulsed_call_length: number;
 
-    @Column({ type: 'int', nullable: true })
+    @Column({ type: 'int' })
     pulsed_total_mins: number;
 
     @Column({ nullable: true })
@@ -57,4 +62,7 @@ export class Order {
 
     @OneToMany(() => Slot, (slot) => slot.order)
     slots: Slot[];
+
+    @OneToMany(() => Call, (call) => call.slot)
+    calls: Call[];
 }

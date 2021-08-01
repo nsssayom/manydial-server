@@ -1,12 +1,6 @@
-import {
-    HttpCode,
-    HttpException,
-    HttpStatus,
-    Injectable,
-} from '@nestjs/common';
-import { SchedulerRegistry, Timeout } from '@nestjs/schedule';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { SchedulerRegistry } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CronJob } from 'cron';
 import { MoreThanOrEqual, Repository } from 'typeorm';
 import { GetSlotDto } from './dto/get-slot.dto';
 import { Slot } from './entities/slot.entity';
@@ -154,6 +148,7 @@ export class SlotsService {
                         }
                     };
                     const timeout = setTimeout(callback, milliseconds);
+                    // Add the timeout to the scheduler registry with callback to be called after the timeout
                     this.schedulerRegistry.addTimeout(
                         'slot_check_timeout_' + saved_object.id,
                         timeout,

@@ -1,22 +1,19 @@
 import {
     Controller,
-    Get,
     Post,
     Body,
-    Patch,
-    Param,
-    Delete,
     UseInterceptors,
     UploadedFile,
     UseGuards,
     Req,
+    Get,
+    Param,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerOptions } from 'src/config/multer.config';
 import { AuthGuard } from '@nestjs/passport';
-import { request } from 'express';
 
 @Controller('orders')
 export class OrdersController {
@@ -37,18 +34,25 @@ export class OrdersController {
         );
     }
 
-    @Get()
+    @Post('calls/status')
+    updateCallStatus(@Body() callbackResponse: any) {
+        console.log('callback', callbackResponse);
+        return this.ordersService.updateCallStatus(callbackResponse);
+    }
+
+    /*     @Get()
     findAll() {
         return this.ordersService.findAll();
     }
+    */
 
     @Get(':id')
     findOne(@Param('id') id: string) {
-        return this.ordersService.findOne(+id);
+        return this.ordersService.findOne(id);
     }
-
+    /*
     @Delete(':id')
     remove(@Param('id') id: string) {
         return this.ordersService.remove(+id);
-    }
+    } */
 }

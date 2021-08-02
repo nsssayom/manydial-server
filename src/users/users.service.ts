@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { InjectTwilio, TwilioClient } from 'nestjs-twilio';
 import { lastValueFrom, map } from 'rxjs';
@@ -17,12 +17,12 @@ export class UsersService {
         private readonly twilioClient: TwilioClient,
     ) {}
 
+    private readonly logger = new Logger('UserService');
+
     // returns user object id exists in db, create if not
     async userAuth(
         /*createUserDto: CreateUserDto,*/ firebaseUser,
     ): Promise<User> {
-        //const { porichoy_id, date_of_birth } = createUserDto;
-        //return firebaseUser.uid;
         const _user = await this.userRepository.findOne({
             where: { uid: firebaseUser.uid },
         });
@@ -30,10 +30,12 @@ export class UsersService {
         if (!_user) {
             const user: User = new User();
             user.uid = firebaseUser.uid;
-            //user.porichoy_id = porichoy_id;
-            //user.date_of_birth = date_of_birth;
-            return await this.userRepository.save(user);
+            const new_user = await this.userRepository.save(user);
+            this.logger.log(
+                `New user created with Firebase UID ${new_user.uid}`,
+            );
         }
+        this.logger.log(`Authenticated user with Firebase UID ${_user.uid}`);
         return _user;
     }
 
@@ -138,11 +140,17 @@ export class UsersService {
         });
 
         if (!user) {
+            this.logger.warn(
+                `User not found with Firebase UID ${firebaseUser.uid}`,
+            );
             throw new HttpException('User not found', HttpStatus.NOT_FOUND);
         }
 
         // if user already has verified sender id
         if (user && user.twilio_verified) {
+            this.logger.warn(
+                `User not found with Firebase UID ${firebaseUser.uid} alreay has a verified Twilio sender ID`,
+            );
             throw new HttpException(
                 'This user already has a verified sender id',
                 HttpStatus.CONFLICT,
@@ -161,10 +169,17 @@ export class UsersService {
                 const user: User = new User();
                 user.uid = firebaseUser.uid;
                 user.twilio_verification_call_sid = validationRequest.callSid;
+                this.logger.log(
+                    `Validation call ${validationRequest.callSid} initiate for User ${firebaseUser.uid}`,
+                );
                 await this.userRepository.save(user); // inserting callSid to db
                 return validationRequest;
             })
             .catch((err) => {
+                this.logger.log(
+                    `Validation request failed for User ${firebaseUser.uid}`,
+                    err,
+                );
                 throw new HttpException(
                     'Verification service returned an error',
                     HttpStatus.SERVICE_UNAVAILABLE,
@@ -174,20 +189,22 @@ export class UsersService {
 
     // Method to receive callback from Twilio
     async twilioCallback(response) {
-        //console.log(response);
+        this.logger.log(
+            `Twilio verificationStatus ${response.VerificationStatus} recieved for CallSid ${response.CallSid}`,
+        );
         if (response.VerificationStatus === 'success') {
-            // Verification successful
             const user: User = await this.userRepository.findOne({
                 where: {
                     twilio_verification_call_sid: response.CallSid,
                 },
             });
-            //console.log('success-user', user.uid);
 
             if (user) {
                 user.twilio_verified = true;
                 await this.userRepository.save(user);
-                //console.log('success-user', user);
+                this.logger.log(
+                    `Twilio verification successful for user ${user.uid}`,
+                );
             }
         } else {
             // Verification failed
@@ -201,7 +218,9 @@ export class UsersService {
                 user.twilio_verified = false;
                 user.twilio_verification_call_sid = '';
                 await this.userRepository.save(user);
-                //console.error('verification failed', response);
+                this.logger.error(
+                    `Twilio failed verification response resolved to user ${user.uid}`,
+                );
             }
         }
     }

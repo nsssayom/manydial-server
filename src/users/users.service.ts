@@ -30,10 +30,12 @@ export class UsersService {
         if (!_user) {
             const user: User = new User();
             user.uid = firebaseUser.uid;
+            user.phone_number = firebaseUser.phone_number;
             const new_user = await this.userRepository.save(user);
             this.logger.log(
                 `New user created with Firebase UID ${new_user.uid}`,
             );
+            return new_user;
         }
         this.logger.log(`Authenticated user with Firebase UID ${_user.uid}`);
         return _user;
@@ -103,6 +105,7 @@ export class UsersService {
                     // NID Verified, save to database
                     const user: User = new User();
                     user.uid = firebaseUser.uid;
+                    user.phone_number = firebaseUser.phone_number;
                     user.porichoy_id = porichoy_id;
                     user.date_of_birth = date_of_birth;
                     user.porichoy_response = res.voter;
@@ -168,6 +171,7 @@ export class UsersService {
             .then(async (validationRequest) => {
                 const user: User = new User();
                 user.uid = firebaseUser.uid;
+                user.phone_number = firebaseUser.phone_number;
                 user.twilio_verification_call_sid = validationRequest.callSid;
                 this.logger.log(
                     `Validation call ${validationRequest.callSid} initiate for User ${firebaseUser.uid}`,

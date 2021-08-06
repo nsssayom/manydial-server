@@ -1,14 +1,4 @@
-import {
-    Controller,
-    Get,
-    Post,
-    Body,
-    Patch,
-    Param,
-    Delete,
-    Inject,
-    UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Body, Inject, UseGuards, Post } from '@nestjs/common';
 import { SlotsService } from './slots.service';
 import { GetSlotDto } from './dto/get-slot.dto';
 import {
@@ -42,8 +32,8 @@ export class SlotsController {
         return this.slotsService.getAllSlots();
     }
 
-    @Get()
-    // @UseGuards(AuthGuard('firebase'))
+    @Post()
+    @UseGuards(AuthGuard('firebase'))
     getSlotEndingTime(@Body() getSlotDto: GetSlotDto) {
         return this.slotsService.getSlot(getSlotDto);
     }

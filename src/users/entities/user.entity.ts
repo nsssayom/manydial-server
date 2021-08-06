@@ -1,4 +1,3 @@
-import { json } from 'express';
 import { Order } from 'src/orders/entities/order.entity';
 import {
     Column,
@@ -13,6 +12,11 @@ import {
 export class User {
     @PrimaryColumn({ unique: true })
     uid: string;
+
+    @Column({
+        nullable: true,
+    })
+    phone_number: string;
 
     @Column({
         nullable: true,

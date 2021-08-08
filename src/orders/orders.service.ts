@@ -12,7 +12,7 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
 import { Call } from './entities/call.entity';
 import { User } from 'src/users/entities/user.entity';
-import { exec as childProcessExec } from 'child_process';
+//import { exec as childProcessExec } from 'child_process';
 
 @Injectable()
 export class OrdersService {

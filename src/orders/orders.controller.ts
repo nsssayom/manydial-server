@@ -36,7 +36,7 @@ export class OrdersController {
 
     @Post('calls/status')
     updateCallStatus(@Body() callbackResponse: any) {
-        console.log('callback', callbackResponse);
+        //console.log('callback', callbackResponse);
         return this.ordersService.updateCallStatus(callbackResponse);
     }
 

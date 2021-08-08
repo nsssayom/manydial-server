@@ -2,7 +2,9 @@ import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
 import { v4 as uuid } from 'uuid';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus, Logger } from '@nestjs/common';
+
+const logger = new Logger('MulterConfig');
 
 // Multer configuration
 export const multerConfig = {
@@ -18,11 +20,15 @@ export const multerOptions = {
     },
     // Check the mimetypes to allow for upload
     fileFilter: (req: any, file: any, cb: any) => {
-        console.log('file', file.mimetype);
-        if (file.mimetype.match(/\/(mpeg|wave|webm|acc)$/)) {
+        logger.debug(`Uploaded File Type: ${file.mimetype}`);
+
+        if (file.mimetype.match(/\/(mpeg|wave|webm|acc|wav)$/)) {
             // Allow storage of file
             cb(null, true);
         } else {
+            logger.error(
+                `Unsupported file: ${extname(file.originalname)} rejected`,
+            );
             // Reject file
             cb(
                 new HttpException(
@@ -38,7 +44,6 @@ export const multerOptions = {
         // Destination storage path details
         destination: (req: any, file: any, cb: any) => {
             const uploadPath = multerConfig.dest;
-            console.log('Upload path:', uploadPath);
 
             // Create folder if doesn't exist
             if (!existsSync(uploadPath)) {

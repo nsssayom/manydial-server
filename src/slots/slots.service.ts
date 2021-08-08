@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MoreThanOrEqual, Repository } from 'typeorm';
+import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 import { GetSlotDto } from './dto/get-slot.dto';
 import { Slot } from './entities/slot.entity';
 
@@ -20,8 +20,32 @@ export class SlotsService {
         });
     }
 
+    /* async getSlotNew(getSlotDto: GetSlotDto) {
+        const { preferred_start_time, number_of_calls } = getSlotDto;
+        const preferredStartDate = new Date(preferred_start_time);
+        // calculate required time to finish calls
+        let requiredTime = Math.ceil(
+            number_of_calls / parseInt(process.env.CALL_PER_SEC),
+        );
+
+        const simpleSlot = await this.slotRepository.find({
+            where: {
+                start_time: LessThanOrEqual(preferred_start_time),
+                end_time: LessThanOrEqual(
+                    new Date(
+                        preferredStartDate.valueOf() + requiredTime * 1000,
+                    ),
+                ),
+                //is_active: true,
+            },
+            order: { end_time: 'ASC' },
+        });
+    } */
+
     // A method to get slot ending time from preferred start time
     async getSlot(getSlotDto: GetSlotDto) {
+        //console.log(getSlotDto);
+
         const { preferred_start_time, number_of_calls } = getSlotDto;
 
         const preferredStartDate = new Date(preferred_start_time);
@@ -37,6 +61,11 @@ export class SlotsService {
         const engagedSlots = await this.slotRepository.find({
             where: {
                 end_time: MoreThanOrEqual(preferred_start_time),
+                start_time: LessThanOrEqual(
+                    new Date(
+                        preferredStartDate.valueOf() + requiredTime * 1000,
+                    ),
+                ),
                 //is_active: true,
             },
             order: { end_time: 'ASC' },
@@ -64,7 +93,13 @@ export class SlotsService {
                         new Date(slot.end_time).valueOf()) /
                     1000;
 
-                //console.log('available time', availableTime, 'in index', index);
+                console.log(
+                    'available time',
+                    availableTime,
+                    'in index',
+                    index,
+                    slot,
+                );
 
                 // if slot available in-between
                 if (availableTime > 0) {
@@ -85,7 +120,7 @@ export class SlotsService {
                     }
                     // if last slot found
                     else {
-                        availableTimeSegment['_slot_end_time'] = new Date(
+                        availableTimeSegment['slot_end_time'] = new Date(
                             slotStartTime.valueOf() + requiredTime * 1000,
                         );
                         requiredTime = 0;
@@ -96,6 +131,8 @@ export class SlotsService {
             }
             // if there is no next slot
             else {
+                //console.log('clear slot');
+
                 availableTimeSegment['slot_start_time'] = new Date(
                     new Date(slot.end_time.valueOf()),
                 );
@@ -107,7 +144,6 @@ export class SlotsService {
                 availableTimeSlots.push(availableTimeSegment);
             }
         });
-
         //return availableTimeSlots;
 
         return await Promise.all(
@@ -142,9 +178,9 @@ export class SlotsService {
                         });
                         if (slot) {
                             await this.slotRepository.delete(slot.id);
-                            console.log('deleting slot', slot);
+                            // console.log('deleting slot', slot);
                         } else {
-                            console.log('active slot', saved_object);
+                            // console.log('active slot', saved_object);
                         }
                     };
                     const timeout = setTimeout(callback, milliseconds);

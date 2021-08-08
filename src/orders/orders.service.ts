@@ -5,12 +5,14 @@ import { Repository } from 'typeorm';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Order } from './entities/order.entity';
 import { getAudioDurationInSeconds } from 'get-audio-duration';
+//import { getVideoDurationInSeconds } from 'get-video-duration';
 import { InjectTwilio, TwilioClient } from 'nestjs-twilio';
 import VoiceResponse = require('twilio/lib/twiml/VoiceResponse');
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
 import { Call } from './entities/call.entity';
 import { User } from 'src/users/entities/user.entity';
+import { exec as childProcessExec } from 'child_process';
 
 @Injectable()
 export class OrdersService {
@@ -82,6 +84,7 @@ export class OrdersService {
     }
 
     async create(firebaseUser: any, file: any, createOrderDto: CreateOrderDto) {
+        console.log(createOrderDto.slots);
         const { recipients, slots } = createOrderDto;
         const recipients_arr = recipients.split(',');
         const order = new Order();
@@ -101,9 +104,22 @@ export class OrdersService {
         order.user = firebaseUser.uid;
         order.audio_url = process.env.PUBLIC_AUDIO_BASE_URL + file.filename;
 
+        console.log(file);
+
+        /* if (file.mimetype === 'audio/webm') {
+            audioDurationInSeconds = Math.ceil(
+                await getVideoDurationInSeconds(file.path),
+            );
+        } else {
+            audioDurationInSeconds = Math.ceil(
+                await getAudioDurationInSeconds(file.path),
+            );
+        } */
+
         const audioDurationInSeconds = Math.ceil(
             await getAudioDurationInSeconds(file.path),
         );
+
         order.audio_length = audioDurationInSeconds;
         order.pulsed_call_length = Math.ceil(audioDurationInSeconds / 60);
         order.pulsed_total_mins = order.pulsed_call_length * order.no_of_calls;

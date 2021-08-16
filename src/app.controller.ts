@@ -1,4 +1,11 @@
-import { Controller, Get, Inject, Req, UseGuards } from '@nestjs/common';
+import {
+    Controller,
+    Get,
+    Inject,
+    Redirect,
+    Req,
+    UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
     FirebaseAdminSDK,
@@ -14,10 +21,14 @@ export class AppController {
         private readonly fireSDK: FirebaseAdminSDK,
     ) {}
 
-    /* @Get()
-    @UseGuards(AuthGuard('firebase'))
+    @Get('public/audio')
+    @Redirect('https://manydial.com', 301)
+    redirect() {
+        return;
+    }
+    /* @UseGuards(AuthGuard('firebase'))
     getHello(@Req() request): any {
-        //return this.appService.getHello();
+        return this.appService.getHello();
         console.log(request.user);
         return request.user;
     } */

@@ -3,7 +3,7 @@
     "host": "localhost",
     "port": 5432,
     "username": "manydial",
-    "password": "97865321",
+    "password": "!5nu@fKdcA2RrJk?k!B6q$$ffBZ3S^nD",
     "database": "manydial",
     "entities": ["dist/**/*.entity{.ts,.js}"],
     "synchronize": true

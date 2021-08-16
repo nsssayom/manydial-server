@@ -38,3 +38,6 @@ ormconfig.json
 
 # Environment files
 .env
+
+# Public directory
+/public

@@ -39,5 +39,5 @@ ormconfig.json
 # Environment files
 .env
 
-# Public directory
-/public
+# Public audio directory
+/public/audio

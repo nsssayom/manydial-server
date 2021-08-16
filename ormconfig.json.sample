@@ -2,9 +2,9 @@
     "type": "postgres",
     "host": "localhost",
     "port": 5432,
-    "username": "manydial",
-    "password": "!5nu@fKdcA2RrJk?k!B6q$$ffBZ3S^nD",
-    "database": "manydial",
+    "username": "database_username",
+    "password": "database_password",
+    "database": "database_name",
     "entities": ["dist/**/*.entity{.ts,.js}"],
     "synchronize": true
 }

@@ -30,6 +30,20 @@ export class UsersService {
 
         // if user already exist in db
         if (_user) {
+            // if user had already verified sender ID
+            await this.twilioClient.outgoingCallerIds
+                .list({
+                    phoneNumber: _user.phone_number,
+                    limit: 1,
+                })
+                .then((callerId) => {
+                    if (callerId.length === 0) {
+                        _user.twilio_verified = true;
+                    } else {
+                        _user.twilio_verified = false;
+                    }
+                });
+
             this.logger.log(
                 `Existing user authenticated with Firebase UID ${_user.uid} & Phonenumber ${_user.phone_number}`,
             );

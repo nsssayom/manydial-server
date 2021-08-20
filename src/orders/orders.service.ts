@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Slot } from 'src/slots/entities/slot.entity';
 import { Repository } from 'typeorm';
@@ -13,6 +13,7 @@ import { CronJob } from 'cron';
 import { Call } from './entities/call.entity';
 import { User } from 'src/users/entities/user.entity';
 //import { exec as childProcessExec } from 'child_process';
+import { PhoneNumberUtil } from 'google-libphonenumber';
 
 @Injectable()
 export class OrdersService {
@@ -28,7 +29,10 @@ export class OrdersService {
         @InjectTwilio()
         private readonly twilioClient: TwilioClient,
         private schedulerRegistry: SchedulerRegistry,
+        private phoneUtil: PhoneNumberUtil = PhoneNumberUtil.getInstance(),
     ) {}
+
+    private readonly logger = new Logger('OrderService');
 
     initiateCall(slot: Slot, order: Order, firebaseUser: any) {
         const voiceResponse = new VoiceResponse();
@@ -86,9 +90,29 @@ export class OrdersService {
     async create(firebaseUser: any, file: any, createOrderDto: CreateOrderDto) {
         console.log(createOrderDto.slots);
         const { recipients, slots } = createOrderDto;
+
+        // Spliting recipients by "," token
         const recipients_arr = recipients.split(',');
+
+        const user = await this.userRepository.findOne(firebaseUser.uid);
+
+        if (
+            !recipients_arr.every((recipient) => {
+                return this.phoneUtil.isValidNumberForRegion(
+                    this.phoneUtil.parse(recipient, user.country_code),
+                    user.country_code,
+                );
+            })
+        ) {
+            throw new HttpException(
+                'International or invalid recipient(s) are not allowed',
+                HttpStatus.BAD_REQUEST,
+            );
+        }
+
         const order = new Order();
         order.recipients = recipients;
+
         order.no_of_calls = recipients_arr.length;
 
         order.slots = await Promise.all(
@@ -148,8 +172,6 @@ export class OrdersService {
             }
         })();
         order.total_cost = order.pulsed_total_mins * order.cost_per_min;
-
-        const user = await this.userRepository.findOne(firebaseUser.uid);
 
         if (order.total_cost > user.balance) {
             throw new HttpException(

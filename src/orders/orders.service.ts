@@ -5,14 +5,12 @@ import { Repository } from 'typeorm';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Order } from './entities/order.entity';
 import { getAudioDurationInSeconds } from 'get-audio-duration';
-//import { getVideoDurationInSeconds } from 'get-video-duration';
 import { InjectTwilio, TwilioClient } from 'nestjs-twilio';
 import VoiceResponse = require('twilio/lib/twiml/VoiceResponse');
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
 import { Call } from './entities/call.entity';
 import { User } from 'src/users/entities/user.entity';
-//import { exec as childProcessExec } from 'child_process';
 import { PhoneNumberUtil } from 'google-libphonenumber';
 
 @Injectable()
@@ -64,12 +62,12 @@ export class OrdersService {
                         _call.slot = slot;
                         _call.order = order;
                         await this.callRepository.save(_call);
-                        console.log(
-                            `Initiated call to ${recipient} with sid: ${call.sid}`,
+                        this.logger.log(
+                            `📞 Initiated call to ${recipient} with sid: ${call.sid}`,
                         );
                     })
                     .catch((err) => {
-                        console.log(err);
+                        this.logger.error(err.message);
                         throw new HttpException(
                             'Internal Server Error',
                             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -88,9 +86,7 @@ export class OrdersService {
     }
 
     async create(firebaseUser: any, file: any, createOrderDto: CreateOrderDto) {
-        console.log(createOrderDto.slots);
         const { recipients, slots } = createOrderDto;
-
         // Spliting recipients by "," token
         const recipients_arr = recipients.split(',');
 
@@ -104,6 +100,9 @@ export class OrdersService {
                 );
             })
         ) {
+            this.logger.error(
+                `Discared order by user ${user.uid} as international or invalid recipient was detected`,
+            );
             throw new HttpException(
                 'International or invalid recipient(s) are not allowed',
                 HttpStatus.BAD_REQUEST,
@@ -127,18 +126,6 @@ export class OrdersService {
         );
         order.user = firebaseUser.uid;
         order.audio_url = process.env.PUBLIC_AUDIO_BASE_URL + file.filename;
-
-        console.log(file);
-
-        /* if (file.mimetype === 'audio/webm') {
-            audioDurationInSeconds = Math.ceil(
-                await getVideoDurationInSeconds(file.path),
-            );
-        } else {
-            audioDurationInSeconds = Math.ceil(
-                await getAudioDurationInSeconds(file.path),
-            );
-        } */
 
         const audioDurationInSeconds = Math.ceil(
             await getAudioDurationInSeconds(file.path),
@@ -174,6 +161,9 @@ export class OrdersService {
         order.total_cost = order.pulsed_total_mins * order.cost_per_min;
 
         if (order.total_cost > user.balance) {
+            this.logger.error(
+                `User ${user.uid} tried to place order with insufficient balance`,
+            );
             throw new HttpException(
                 'Insufficient Balance',
                 HttpStatus.FORBIDDEN,
@@ -181,6 +171,9 @@ export class OrdersService {
         }
 
         const placed_order = await this.orderRepository.save(order);
+        this.logger.log(
+            `Order ${order.id} successfully placed by user ${user.uid}`,
+        );
         placed_order.slots.forEach(async (slot: Slot) => {
             user.balance -= order.total_cost;
             await this.userRepository.save(user);
@@ -194,6 +187,9 @@ export class OrdersService {
             sid: callbackResponse.CallSid,
         });
         if (call) {
+            this.logger.log(
+                `📞 Call ${call.sid} updated status to ${callbackResponse.CallStatus} from ${call.status}`,
+            );
             call.status = callbackResponse.CallStatus;
             call.duration = callbackResponse.CallDuration;
             call.from = callbackResponse.From;

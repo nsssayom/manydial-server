@@ -1,6 +1,7 @@
 import { HttpService } from '@nestjs/axios';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { FirebaseUser } from '@tfarras/nestjs-firebase-admin';
 import { InjectTwilio, TwilioClient } from 'nestjs-twilio';
 import { lastValueFrom, map } from 'rxjs';
 import { Repository } from 'typeorm';
@@ -21,7 +22,7 @@ export class UsersService {
 
     // returns user object id exists in db, create if not
     async userAuth(
-        /*createUserDto: CreateUserDto,*/ firebaseUser,
+        /*createUserDto: CreateUserDto,*/ firebaseUser: FirebaseUser,
     ): Promise<User> {
         const _user = await this.userRepository.findOne({
             where: { uid: firebaseUser.uid },
@@ -56,14 +57,25 @@ export class UsersService {
                         );
                     }
 
+                    // if user is from a non-restricted country
                     const user: User = new User();
                     user.uid = firebaseUser.uid;
                     user.phone_number = firebaseUser.phone_number;
                     user.country_code = phoneInfo.countryCode;
+
+                    // Check if user already has a verified twilio sender id
+                    await this.twilioClient.outgoingCallerIds
+                        .list({
+                            phoneNumber: firebaseUser.phone_number,
+                            limit: 1,
+                        })
+                        .then((/* callerId */) => {
+                            user.twilio_verified = true;
+                        });
+
                     const new_user = await this.userRepository.save(user);
                     this.logger.log(
-                        `New user created and authenticated with Firebase UID ${new_user.uid} 
-                        & Phonenumber ${new_user.phone_number}`,
+                        `New user created and authenticated with Firebase UID ${new_user.uid} & Phonenumber ${new_user.phone_number}`,
                     );
                     return new_user;
                 });
@@ -171,6 +183,7 @@ export class UsersService {
             where: { uid: firebaseUser.uid },
         });
 
+        // if user is not authenticated
         if (!user) {
             this.logger.warn(
                 `User not found with Firebase UID ${firebaseUser.uid}`,
@@ -178,13 +191,36 @@ export class UsersService {
             throw new HttpException('User not found', HttpStatus.NOT_FOUND);
         }
 
-        // if user already has verified sender id
-        if (user && user.twilio_verified) {
-            this.logger.warn(
-                `User not found with Firebase UID ${firebaseUser.uid} alreay has a verified Twilio sender ID`,
+        // Check if user already has a verified twilio sender id
+        const updated_user = await this.twilioClient.outgoingCallerIds
+            .list({
+                phoneNumber: firebaseUser.phone_number,
+                limit: 1,
+            })
+            .then((callerId) => {
+                //update twilio verified status
+                console.log(callerId);
+                if (callerId && callerId.length > 0) {
+                    user.twilio_verified = true;
+                } else {
+                    user.twilio_verified = false;
+                }
+                return this.userRepository.save(user);
+            })
+            .catch((err) => {
+                this.logger.error(err);
+                throw new HttpException(
+                    'Error fetching sender IDs',
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                );
+            });
+
+        if (updated_user.twilio_verified) {
+            this.logger.log(
+                `Twilio outgoing called ID already verified for Firebase UID ${firebaseUser.uid} & Phonenumber ${user.phone_number}`,
             );
             throw new HttpException(
-                'This user already has a verified sender id',
+                'Twilio outgoing caller ID already verified',
                 HttpStatus.CONFLICT,
             );
         }

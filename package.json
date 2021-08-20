@@ -39,6 +39,7 @@
         "ffprobe": "^1.1.2",
         "get-audio-duration": "^3.0.0",
         "get-video-duration": "^3.1.0",
+        "nestjs-real-ip": "^2.0.0",
         "nestjs-twilio": "^1.2.1",
         "passport": "^0.4.1",
         "passport-jwt": "^4.0.0",

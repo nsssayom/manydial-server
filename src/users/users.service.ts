@@ -27,18 +27,47 @@ export class UsersService {
             where: { uid: firebaseUser.uid },
         });
 
-        if (!_user) {
-            const user: User = new User();
-            user.uid = firebaseUser.uid;
-            user.phone_number = firebaseUser.phone_number;
-            const new_user = await this.userRepository.save(user);
+        // if user already exist in db
+        if (_user) {
             this.logger.log(
-                `New user created with Firebase UID ${new_user.uid}`,
+                `Existing user authenticated with Firebase UID ${_user.uid} & Phonenumber ${_user.phone_number}`,
             );
-            return new_user;
+            return _user;
         }
-        this.logger.log(`Authenticated user with Firebase UID ${_user.uid}`);
-        return _user;
+        // if user does not exist in db
+        else {
+            /* fetching country code from twilio phone number validation and formatting lookup
+               for reference: https://www.twilio.com/docs/lookup/tutorials/validation-and-formatting
+            */
+            return this.twilioClient.lookups.v1
+                .phoneNumbers(firebaseUser.phone_number)
+                .fetch()
+                .then(async (phoneInfo) => {
+                    const restrictedCountries =
+                        process.env.RESTRICTED_COUNTRIES.split(',');
+                    // if user is from a restricted country
+                    if (restrictedCountries.includes(phoneInfo.countryCode)) {
+                        this.logger.warn(
+                            `Authention request denied for Firebase UID ${firebaseUser.uid} originated from restricted country ${phoneInfo.countryCode}`,
+                        );
+                        throw new HttpException(
+                            'User is from a restricted country',
+                            HttpStatus.FORBIDDEN,
+                        );
+                    }
+
+                    const user: User = new User();
+                    user.uid = firebaseUser.uid;
+                    user.phone_number = firebaseUser.phone_number;
+                    user.country_code = phoneInfo.countryCode;
+                    const new_user = await this.userRepository.save(user);
+                    this.logger.log(
+                        `New user created and authenticated with Firebase UID ${new_user.uid} 
+                        & Phonenumber ${new_user.phone_number}`,
+                    );
+                    return new_user;
+                });
+        }
     }
 
     async verifyPorichoy(

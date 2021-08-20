@@ -21,6 +21,11 @@ export class User {
     @Column({
         nullable: true,
     })
+    country_code: string;
+
+    @Column({
+        nullable: true,
+    })
     date_of_birth: string;
 
     @Column({

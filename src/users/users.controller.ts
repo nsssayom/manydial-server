@@ -8,15 +8,15 @@ import {
     HttpCode,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+/* import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto'; */
 import { VerifyPorichoyDto } from './dto/verify-porichoy.dto.';
 import {
     FirebaseAdminSDK,
     FIREBASE_ADMIN_INJECT,
 } from '@tfarras/nestjs-firebase-admin';
 import { AuthGuard } from '@nestjs/passport';
-
+// import { RealIP } from 'nestjs-real-ip';
 @Controller('users')
 export class UsersController {
     constructor(
@@ -27,7 +27,11 @@ export class UsersController {
 
     @Post('auth')
     @UseGuards(AuthGuard('firebase'))
-    create(/*@Body() createUserDto: CreateUserDto,*/ @Req() request) {
+    create(
+        /*@Body() createUserDto: CreateUserDto,*/ @Req() request,
+        /* @RealIP() ip: string, */
+    ) {
+        //console.log(ip);
         return this.usersService.userAuth(
             //createUserDto,
             request.user.firebase_user,

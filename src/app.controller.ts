@@ -1,12 +1,4 @@
-import {
-    Controller,
-    Get,
-    Inject,
-    Redirect,
-    Req,
-    UseGuards,
-} from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { Controller, Get, Inject, Redirect } from '@nestjs/common';
 import {
     FirebaseAdminSDK,
     FIREBASE_ADMIN_INJECT,

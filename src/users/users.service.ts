@@ -37,7 +37,7 @@ export class UsersService {
                     limit: 1,
                 })
                 .then((callerId) => {
-                    if (callerId.length === 0) {
+                    if (callerId.length > 0) {
                         _user.twilio_verified = true;
                     } else {
                         _user.twilio_verified = false;
@@ -83,8 +83,12 @@ export class UsersService {
                             phoneNumber: firebaseUser.phone_number,
                             limit: 1,
                         })
-                        .then((/* callerId */) => {
-                            user.twilio_verified = true;
+                        .then((callerId) => {
+                            if (callerId.length > 0) {
+                                user.twilio_verified = true;
+                            } else {
+                                user.twilio_verified = false;
+                            }
                         });
 
                     const new_user = await this.userRepository.save(user);

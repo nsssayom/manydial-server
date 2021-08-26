@@ -117,6 +117,7 @@ export class OrdersService {
         order.slots = await Promise.all(
             JSON.parse(slots).map(async (slot: any) => {
                 const slot_obj = new Slot(slot);
+                slot_obj.is_active = true;
                 slot_obj.recipients = recipients_arr.splice(
                     0,
                     slot_obj.call_count,
@@ -191,6 +192,18 @@ export class OrdersService {
                 `📞 Call ${call.sid} updated status to ${callbackResponse.CallStatus} from ${call.status}`,
             );
             call.status = callbackResponse.CallStatus;
+            if (call.status === 'failed') {
+                const order = await this.orderRepository.findOne(call.order);
+                const user = await this.userRepository.findOne(order.user);
+                // Return the balance to the user for the failed calls
+                user.balance += order.cost_per_min * order.pulsed_call_length;
+                this.logger.log(
+                    `💵 Credit ${
+                        order.cost_per_min * order.pulsed_call_length
+                    } returned to ${user.uid} for a failed call to ${call.to}`,
+                );
+                await this.userRepository.save(user);
+            }
             call.duration = callbackResponse.CallDuration;
             call.from = callbackResponse.From;
             await this.callRepository.save(call);

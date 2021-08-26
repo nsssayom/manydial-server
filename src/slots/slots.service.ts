@@ -66,7 +66,7 @@ export class SlotsService {
                         preferredStartDate.valueOf() + requiredTime * 1000,
                     ),
                 ),
-                //is_active: true,
+                is_active: true,
             },
             order: { end_time: 'ASC' },
         });
@@ -152,7 +152,7 @@ export class SlotsService {
                 const slot_obj = new Slot();
                 slot_obj.start_time = slot.slot_start_time;
                 slot_obj.end_time = slot.slot_end_time;
-                slot_obj.is_active = true; // TODO: make this false
+                slot_obj.is_active = false;
                 slot_obj.call_count =
                     ((slot.slot_end_time.valueOf() -
                         slot.slot_start_time.valueOf()) *

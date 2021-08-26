@@ -140,7 +140,7 @@ export class OrdersService {
                 order.no_of_calls <=
                 parseInt(process.env.CALL_RATE_TIER_1_LIMIT)
             ) {
-                return parseFloat(process.env.CALL_RATE_TIER_1);
+                return Number(parseFloat(process.env.CALL_RATE_TIER_1));
             } else if (
                 order.no_of_calls >=
                     parseInt(process.env.CALL_RATE_TIER_1_LIMIT) &&

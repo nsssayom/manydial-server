@@ -68,6 +68,7 @@ export class User {
     @Column({
         default: 10,
         nullable: true,
+        type: 'float',
     })
     balance: number;
 

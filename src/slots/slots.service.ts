@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
@@ -12,6 +12,8 @@ export class SlotsService {
         private slotRepository: Repository<Slot>,
         private schedulerRegistry: SchedulerRegistry,
     ) {}
+
+    private readonly logger = new Logger('SlotService');
 
     async getAllSlots() {
         // get existing time slots
@@ -93,14 +95,6 @@ export class SlotsService {
                         new Date(slot.end_time).valueOf()) /
                     1000;
 
-                console.log(
-                    'available time',
-                    availableTime,
-                    'in index',
-                    index,
-                    slot,
-                );
-
                 // if slot available in-between
                 if (availableTime > 0) {
                     const slotStartTime = new Date(
@@ -167,9 +161,6 @@ export class SlotsService {
                     // Callback method to check after time-out if the slot has been activated.
                     // Otherwise, it will be deleted.
                     const callback = async () => {
-                        console.log(
-                            `Timeout ${saved_object.id} executing after (${milliseconds})!`,
-                        );
                         const slot = await this.slotRepository.findOne({
                             where: {
                                 id: saved_object.id,
@@ -178,9 +169,13 @@ export class SlotsService {
                         });
                         if (slot) {
                             await this.slotRepository.delete(slot.id);
-                            // console.log('deleting slot', slot);
+                            this.logger.log(
+                                `❌ Deleting slot ${slot.id} for being inactive after timeout`,
+                            );
                         } else {
-                            // console.log('active slot', saved_object);
+                            this.logger.log(
+                                `✅ Slot ${saved_object.id} is keep active after timeout`,
+                            );
                         }
                     };
                     const timeout = setTimeout(callback, milliseconds);

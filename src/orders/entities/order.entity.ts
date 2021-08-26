@@ -45,10 +45,10 @@ export class Order {
     @Column({ type: 'int' })
     pulsed_total_mins: number;
 
-    @Column({ nullable: true })
+    @Column({ type: 'float', nullable: true })
     cost_per_min: number;
 
-    @Column({ nullable: true })
+    @Column({ type: 'float', nullable: true })
     total_cost: number;
 
     @Column({ default: 'QUEUED' })

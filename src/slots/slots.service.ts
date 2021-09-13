@@ -22,28 +22,6 @@ export class SlotsService {
         });
     }
 
-    /* async getSlotNew(getSlotDto: GetSlotDto) {
-        const { preferred_start_time, number_of_calls } = getSlotDto;
-        const preferredStartDate = new Date(preferred_start_time);
-        // calculate required time to finish calls
-        let requiredTime = Math.ceil(
-            number_of_calls / parseInt(process.env.CALL_PER_SEC),
-        );
-
-        const simpleSlot = await this.slotRepository.find({
-            where: {
-                start_time: LessThanOrEqual(preferred_start_time),
-                end_time: LessThanOrEqual(
-                    new Date(
-                        preferredStartDate.valueOf() + requiredTime * 1000,
-                    ),
-                ),
-                //is_active: true,
-            },
-            order: { end_time: 'ASC' },
-        });
-    } */
-
     // A method to get slot ending time from preferred start time
     async getSlot(getSlotDto: GetSlotDto) {
         //console.log(getSlotDto);
@@ -60,18 +38,21 @@ export class SlotsService {
         //console.log('required time', requiredTime);
 
         // get existing time slots
-        const engagedSlots = await this.slotRepository.find({
+        let engagedSlots = await this.slotRepository.find({
             where: {
                 end_time: MoreThanOrEqual(preferred_start_time),
-                start_time: LessThanOrEqual(
+                /* start_time: LessThanOrEqual(
                     new Date(
                         preferredStartDate.valueOf() + requiredTime * 1000,
                     ),
-                ),
-                is_active: true,
+                ), */
+                //is_active: true,
             },
+
             order: { end_time: 'ASC' },
         });
+
+        // console.log('engaged slots', engagedSlots.length, engagedSlots);
 
         const availableTimeSlots = [];
 
@@ -82,8 +63,31 @@ export class SlotsService {
                     preferredStartDate.valueOf() + requiredTime * 1000,
                 ),
             });
-        }
+        } else {
+            if (engagedSlots[0].start_time > preferredStartDate) {
+                const slot = {};
+                slot['slot_start_time'] = preferredStartDate;
 
+                if (
+                    engagedSlots[0].start_time.valueOf() -
+                        preferredStartDate.valueOf() >=
+                    requiredTime * 1000
+                ) {
+                    slot['slot_end_time'] = new Date(
+                        preferredStartDate.valueOf() + requiredTime * 1000,
+                    );
+                    engagedSlots = [];
+                } else {
+                    slot['slot_end_time'] = engagedSlots[0].start_time;
+                    requiredTime =
+                        requiredTime -
+                        (engagedSlots[0].start_time.valueOf() -
+                            preferredStartDate.valueOf()) /
+                            1000;
+                }
+                availableTimeSlots.push(slot);
+            }
+        }
         engagedSlots.some(function (slot, index) {
             const availableTimeSegment = {};
 
@@ -140,9 +144,12 @@ export class SlotsService {
         });
         //return availableTimeSlots;
 
+        // console.log('available slots', availableTimeSlots, '__');
+
         return await Promise.all(
             availableTimeSlots.map(async (slot) => {
                 const milliseconds = parseInt(process.env.SLOT_CHECK_TIMEOUT);
+
                 const slot_obj = new Slot();
                 slot_obj.start_time = slot.slot_start_time;
                 slot_obj.end_time = slot.slot_end_time;

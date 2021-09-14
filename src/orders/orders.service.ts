@@ -133,7 +133,31 @@ export class OrdersService {
             }),
         );
         order.user = firebaseUser.uid;
-        order.audio_url = process.env.PUBLIC_AUDIO_BASE_URL + file.filename;
+
+        // Convert the audio file to mono mp3
+        const convertedFileName: string = file.filename.split('.')[0] + '.mp3';
+
+        await ffmpeg({ source: file.path })
+            .addOption('-ac', '1')
+            .on('end', () => {
+                this.logger.debug(
+                    `Converted audio file ${file.filename} to mono mp3`,
+                );
+
+                // Delete the original audio file
+                fs.unlink(file.path, (err) => {
+                    if (err) {
+                        this.logger.error(err.message);
+                        throw new HttpException(
+                            'Internal Server Error',
+                            HttpStatus.INTERNAL_SERVER_ERROR,
+                        );
+                    }
+                });
+            })
+            .saveToFile('public/audio/' + convertedFileName);
+
+        order.audio_url = process.env.PUBLIC_AUDIO_BASE_URL + convertedFileName;
 
         const audioDurationInSeconds = Math.ceil(
             await getAudioDurationInSeconds(file.path),
@@ -187,27 +211,6 @@ export class OrdersService {
             await this.userRepository.save(user);
             this.initiateCall(slot, placed_order, firebaseUser);
         });
-
-        // Convert the audio file to mono mp3
-        await ffmpeg({ source: file.path })
-            .addOption('-ac', '1')
-            .on('end', () => {
-                this.logger.debug(
-                    `Converted audio file ${file.filename} to mono mp3`,
-                );
-
-                // Delete the original audio file
-                fs.unlink(file.path, (err) => {
-                    if (err) {
-                        this.logger.error(err.message);
-                        throw new HttpException(
-                            'Internal Server Error',
-                            HttpStatus.INTERNAL_SERVER_ERROR,
-                        );
-                    }
-                });
-            })
-            .saveToFile('public/audio/' + file.filename.split('.')[0] + '.mp3');
 
         // Return the order
         return placed_order;

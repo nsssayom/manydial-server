@@ -12,8 +12,11 @@ import { CronJob } from 'cron';
 import { Call } from './entities/call.entity';
 import { User } from 'src/users/entities/user.entity';
 import { PhoneNumberUtil } from 'google-libphonenumber';
-import * as ffmpeg from 'fluent-ffmpeg';
+
 import fs = require('fs');
+import ffmpegPath = require('@ffmpeg-installer/ffmpeg');
+import ffmpeg = require('fluent-ffmpeg');
+ffmpeg.setFfmpegPath(ffmpegPath.path);
 
 @Injectable()
 export class OrdersService {

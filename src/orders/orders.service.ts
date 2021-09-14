@@ -12,6 +12,8 @@ import { CronJob } from 'cron';
 import { Call } from './entities/call.entity';
 import { User } from 'src/users/entities/user.entity';
 import { PhoneNumberUtil } from 'google-libphonenumber';
+import * as ffmpeg from 'fluent-ffmpeg';
+import fs = require('fs');
 
 @Injectable()
 export class OrdersService {
@@ -114,6 +116,8 @@ export class OrdersService {
 
         order.no_of_calls = recipients_arr.length;
 
+        // A potential bug here that has been supressed using the following line @ts-ignore
+        // @ts-ignore
         order.slots = await Promise.all(
             JSON.parse(slots).map(async (slot: any) => {
                 const slot_obj = new Slot(slot);
@@ -180,6 +184,29 @@ export class OrdersService {
             await this.userRepository.save(user);
             this.initiateCall(slot, placed_order, firebaseUser);
         });
+
+        // Convert the audio file to mono mp3
+        await ffmpeg({ source: file.path })
+            .addOption('-ac', '1')
+            .on('end', () => {
+                this.logger.debug(
+                    `Converted audio file ${file.filename} to mono mp3`,
+                );
+
+                // Delete the original audio file
+                fs.unlink(file.path, (err) => {
+                    if (err) {
+                        this.logger.error(err.message);
+                        throw new HttpException(
+                            'Internal Server Error',
+                            HttpStatus.INTERNAL_SERVER_ERROR,
+                        );
+                    }
+                });
+            })
+            .saveToFile('public/audio/' + file.filename.split('.')[0] + '.mp3');
+
+        // Return the order
         return placed_order;
     }
 

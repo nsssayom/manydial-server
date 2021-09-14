@@ -9,7 +9,8 @@ const logger = new Logger('MulterConfig');
 // Multer configuration
 export const multerConfig = {
     //dest: process.env.AUDIO_UPLOAD_LOCATION,
-    dest: 'public/audio',
+    temp_dest: 'public/audio/temp',
+    dest: 'public/audio/',
 };
 
 // Multer upload options
@@ -43,7 +44,7 @@ export const multerOptions = {
     storage: diskStorage({
         // Destination storage path details
         destination: (req: any, file: any, cb: any) => {
-            const uploadPath = multerConfig.dest;
+            const uploadPath = multerConfig.temp_dest;
 
             // Create folder if doesn't exist
             if (!existsSync(uploadPath)) {

@@ -37,6 +37,7 @@
         "dotenv": "^10.0.0",
         "exec-sh": "^0.4.0",
         "ffprobe": "^1.1.2",
+        "fluent-ffmpeg": "^2.1.2",
         "get-audio-duration": "^3.0.0",
         "get-video-duration": "^3.1.0",
         "google-libphonenumber": "^3.2.22",

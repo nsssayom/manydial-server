@@ -34,7 +34,7 @@
         "@nestjs/typeorm": "^8.0.1",
         "@tfarras/nestjs-firebase-admin": "^2.0.1",
         "@tfarras/nestjs-firebase-auth": "^2.0.0",
-        "axios": "^0.21.1",
+        "axios": "^0.21.2",
         "dotenv": "^10.0.0",
         "exec-sh": "^0.4.0",
         "ffprobe": "^1.1.2",

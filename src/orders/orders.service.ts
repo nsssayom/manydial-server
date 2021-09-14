@@ -225,7 +225,11 @@ export class OrdersService {
                 `📞 Call ${call.sid} updated status to ${callbackResponse.CallStatus} from ${call.status}`,
             );
             call.status = callbackResponse.CallStatus;
-            if (call.status === 'failed') {
+            if (
+                call.status === 'failed' ||
+                call.status === 'no-answer' ||
+                call.status === 'busy'
+            ) {
                 const order = await this.orderRepository.findOne(call.order);
                 const user = await this.userRepository.findOne(order.user);
                 // Return the balance to the user for the failed calls

@@ -44,7 +44,7 @@
         "google-libphonenumber": "^3.2.22",
         "nestjs-real-ip": "^2.0.0",
         "nestjs-twilio": "^1.2.1",
-        "passport": "^0.4.1",
+        "passport": "^0.6.0",
         "passport-jwt": "^4.0.0",
         "pg": "^8.6.0",
         "reflect-metadata": "^0.1.13",
